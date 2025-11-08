@@ -1,45 +1,59 @@
 import { CONFIG } from './config.js';
 
 export function drawTree(ctx, x, y) {
-    // 8-bites pixeles fa rajzolása (lépcsős)
+    // Minecraft stílusú fa rajzolása (blokkos, pixeles)
     const centerX = x + CONFIG.TILE_SIZE / 2;
-    const centerY = y + CONFIG.TILE_SIZE / 2;
+    const tileCenterY = y + CONFIG.TILE_SIZE / 2;
     
-    // Törzs (pixeles) - sötétebb barna
-    ctx.fillStyle = '#5a3a2a';
-    const trunkX = Math.floor(centerX - 3);
-    const trunkY = Math.floor(y + CONFIG.TILE_SIZE - 8);
-    ctx.fillRect(trunkX, trunkY, 6, 8);
+    // Törzs (barna blokk a középen)
+    ctx.fillStyle = '#6b4423'; // Minecraft fa törzs színe
+    const trunkWidth = 4;
+    const trunkHeight = 10;
+    const trunkX = Math.floor(centerX - trunkWidth / 2);
+    const trunkY = Math.floor(y + CONFIG.TILE_SIZE - trunkHeight);
+    ctx.fillRect(trunkX, trunkY, trunkWidth, trunkHeight);
     
-    // Korona (pixeles kör - lépcsős) - világosabb zöld, hogy látszódjon
-    ctx.fillStyle = '#3a8a3a';
-    const radius = CONFIG.TILE_SIZE / 3;
-    const steps = 8;
-    for (let i = 0; i < steps; i++) {
-        const angle1 = (i / steps) * Math.PI * 2;
-        const angle2 = ((i + 1) / steps) * Math.PI * 2;
-        const x1 = Math.floor(centerX + Math.cos(angle1) * radius);
-        const y1 = Math.floor(centerY + Math.sin(angle1) * radius);
-        const x2 = Math.floor(centerX + Math.cos(angle2) * radius);
-        const y2 = Math.floor(centerY + Math.sin(angle2) * radius);
-        
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.closePath();
-        ctx.fill();
+    // Törzs sötétebb részletek (3D hatás)
+    ctx.fillStyle = '#5a3419';
+    ctx.fillRect(trunkX, trunkY, trunkWidth, 2);
+    ctx.fillRect(trunkX, trunkY + trunkHeight - 2, trunkWidth, 2);
+    
+    // Korona (zöld blokkok/kockák a tetején) - Minecraft stílus
+    ctx.fillStyle = '#4a7c4a'; // Minecraft levelek színe
+    const leafSize = 3;
+    const leafOffset = 2;
+    
+    // Felső réteg levelek (3x3 blokk)
+    const topY = trunkY - leafOffset;
+    for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+            const leafX = Math.floor(centerX + i * leafSize - leafSize / 2);
+            const leafY = Math.floor(topY + j * leafSize - leafSize / 2);
+            ctx.fillRect(leafX, leafY, leafSize, leafSize);
+        }
     }
     
-    // Sötétebb részletek a kontraszthoz
-    ctx.fillStyle = '#2a6a2a';
-    const detailPositions = [
-        [centerX - 4, centerY - 2],
-        [centerX + 3, centerY - 1],
-        [centerX - 2, centerY + 3]
+    // Középső réteg levelek (2x2 blokk)
+    ctx.fillStyle = '#3a6a3a'; // Sötétebb zöld
+    const midY = topY + leafSize;
+    for (let i = -1; i <= 0; i++) {
+        for (let j = -1; j <= 0; j++) {
+            const leafX = Math.floor(centerX + i * leafSize * 1.5 - leafSize / 2);
+            const leafY = Math.floor(midY + j * leafSize * 1.5 - leafSize / 2);
+            ctx.fillRect(leafX, leafY, leafSize, leafSize);
+        }
+    }
+    
+    // Vékony levelek a széleken (1x1 blokkok)
+    ctx.fillStyle = '#5a8a5a'; // Világosabb zöld
+    const edgeLeaves = [
+        [centerX - leafSize * 2, topY],
+        [centerX + leafSize * 2, topY],
+        [centerX - leafSize * 2, topY + leafSize],
+        [centerX + leafSize * 2, topY + leafSize]
     ];
-    detailPositions.forEach(([px, py]) => {
-        ctx.fillRect(Math.floor(px), Math.floor(py), 2, 2);
+    edgeLeaves.forEach(([lx, ly]) => {
+        ctx.fillRect(Math.floor(lx - leafSize / 2), Math.floor(ly - leafSize / 2), leafSize, leafSize);
     });
 }
 
