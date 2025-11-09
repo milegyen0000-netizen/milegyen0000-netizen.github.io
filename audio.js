@@ -15,9 +15,14 @@ export function playSound(type) {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
+    // Speciális hang: fa vágás (téli sufniban)
+    if (type === 'cut') {
+        playChopSound(audioContext);
+        return;
+    }
+
     const frequencies = {
         purchase: 440,
-        cut: 220,
         sell: 330,
         build: 550,
         complete: 660
@@ -26,7 +31,6 @@ export function playSound(type) {
     // Hang hosszúságok (másodpercben)
     const durations = {
         purchase: 0.3,
-        cut: 0.4,
         sell: 0.25,
         build: 0.35,
         complete: 0.5
@@ -45,24 +49,27 @@ export function playSound(type) {
 
 // Levelek suhogása (rugdosás hangja)
 function playRustleSound(audioContext) {
-    const duration = 0.2;
+    const duration = 0.4; // Hosszabb hang
     const sampleRate = audioContext.sampleRate;
     const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
     const data = buffer.getChannelData(0);
     
     // Fehér zaj generálása (suhogó hatás)
     for (let i = 0; i < buffer.length; i++) {
+        const progress = i / buffer.length;
         // Fehér zaj + gyors frekvencia változás
         const noise = (Math.random() * 2 - 1) * 0.3;
-        const freqMod = Math.sin(i * 0.1) * 0.2;
-        data[i] = noise + freqMod;
+        const freqMod = Math.sin(i * 0.1) * 0.15;
+        // Fokozatosan csökkenő amplitúdó (nincs fémes hang a végén)
+        const fadeOut = 1 - (progress * 0.8);
+        data[i] = (noise + freqMod) * fadeOut;
     }
     
     // Szűrés (magas frekvenciák kiemelése - levelek hangja)
     const filter = audioContext.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.value = 2000;
-    filter.Q.value = 1;
+    filter.frequency.value = 1800; // Kicsit alacsonyabb, hogy ne legyen fémes
+    filter.Q.value = 0.8; // Lágyabb szűrés
     
     const source = audioContext.createBufferSource();
     source.buffer = buffer;
@@ -72,10 +79,45 @@ function playRustleSound(audioContext) {
     filter.connect(gainNode);
     gainNode.connect(audioContext.destination);
     
+    // Lágy fade out (nincs hirtelen lecsengés)
     gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
     
     source.start(audioContext.currentTime);
     source.stop(audioContext.currentTime + duration);
+}
+
+// Fa vágás hang (téli sufniban)
+function playChopSound(audioContext) {
+    const duration = 0.15;
+    
+    // Mély, kemény "thunk" hang
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Mély frekvencia (fa vágás)
+    oscillator.frequency.value = 80; // Nagyon mély hang
+    oscillator.type = 'sawtooth'; // Keményebb, durvább hang
+    
+    // Gyors attack, lassú decay (thunk hatás)
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.01); // Gyors fel
+    gainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 0.08); // Lassú le
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    // Alacsony frekvenciás rezonancia (fa hangja)
+    const filter = audioContext.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 200;
+    filter.Q.value = 2;
+    
+    oscillator.connect(filter);
+    filter.connect(gainNode);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration);
 }
 
