@@ -89,7 +89,7 @@ export function updateTimers(updateUI, saveGameState, closeBubble) {
                 gameState.planks++;
                 updateUI();
                 saveGameState();
-                playSound('complete');
+                playSound('minecraftChop'); // Minecraft fa vágás hang
             }
             toRemove.push(key);
             
