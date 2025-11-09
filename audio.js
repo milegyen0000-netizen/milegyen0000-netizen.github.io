@@ -129,8 +129,8 @@ function playChopSound(audioContext) {
 
 // Minecraft fa vágás hang (teljes kivágás) - 3x ismétlés
 function playMinecraftChopSound(audioContext) {
-    const singleDuration = 0.12;
-    const delayBetween = 0.05; // Késleltetés a hangok között
+    const singleDuration = 0.06; // Felére csökkentve (0.12 -> 0.06)
+    const delayBetween = 0.025; // Felére csökkentve (0.05 -> 0.025)
     
     // 3-szor ismétlés
     for (let i = 0; i < 3; i++) {
